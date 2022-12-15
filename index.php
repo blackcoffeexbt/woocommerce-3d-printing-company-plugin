@@ -12,6 +12,7 @@ Version: 0.0.1
 
 //const NONCE_KEY = 'threedp_admin';
 include_once("inc/functions.php");
+include_once("inc/acf.php");
 
 add_action('admin_menu', 'threedp_admin_menu');
 
