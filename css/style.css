@@ -1,0 +1,27 @@
+.bc-printing-list__order {
+	margin-bottom: 20px;
+	border: 1px solid grey;
+	background-color: white;
+}
+.bc-printing-list__order h2 {
+	margin: 10px;
+}
+.bc-printing-list__status {
+	padding: 10px;
+}
+
+.bc-printing-list__status h2 {
+	margin-top: 0;
+}
+
+.bc-printing-list__status--completed {
+	background-color: #a7f2b2;
+}
+
+.bc-printing-list__status--pending {
+	background-color: #ffffba;
+}
+
+.bc-printing-list__status--printing {
+	background-color: #9de3f5;
+}
