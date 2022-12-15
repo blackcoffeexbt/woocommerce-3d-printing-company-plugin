@@ -2,7 +2,7 @@
 /**
  * Add menu item
  */
-function bc_admin_menu()
+function threedp_admin_menu()
 {
     add_menu_page('Printing List', 'Printing List', 'manage_options', 'printing-list.php', 'printing_list_admin_page', 'dashicons-hammer', 6);
 }
@@ -16,8 +16,8 @@ function printing_list_admin_page()
     <div class="wrap">
         <h1>Printing List</h1>
         <?php
-        //    bc_set_product_print_status(958, 441, 743, 'printing');
-        bc_get_orders_with_printed_parts();
+        //    threedp_set_product_print_status(958, 441, 743, 'printing');
+        threedp_get_orders_with_printed_parts();
         ?>
     </div>
     <?php
@@ -27,7 +27,7 @@ function printing_list_admin_page()
  * Get orders and print out a list of items and their print statuses
  * @throws Exception
  */
-function bc_get_orders_with_printed_parts()
+function threedp_get_orders_with_printed_parts()
 {
     $query  = new WC_Order_Query(array(
         'limit'   => - 1,
@@ -64,7 +64,7 @@ function bc_get_orders_with_printed_parts()
                     $product      = wc_get_product($product_id);
                     $product_name = $product->get_title();
                 }
-                $status = bc_get_product_print_status($order_id, $product_id, $product_variation_id);
+                $status = threedp_get_product_print_status($order_id, $product_id, $product_variation_id);
                 echo "<div  class=\"bc-printing-list__status bc-printing-list__status--" . sanitize_title($status) . "\">";
                 for($i =0; $i < $item->get_quantity(); $i++) {
                     echo "<p>{$product_name}</p>";
@@ -87,7 +87,7 @@ function bc_get_orders_with_printed_parts()
                             echo "</p>";
                         }
                     }
-                    echo bc_get_status_form($order_id, $product_id, $product_variation_id);
+                    echo threedp_get_status_form($order_id, $product_id, $product_variation_id);
                 }
                 echo "</div>";
             } else if ($has_3d_printed_components === null) {
@@ -118,9 +118,9 @@ function bc_get_orders_with_printed_parts()
  *
  * @return bool|int
  */
-function bc_set_product_print_status($order_id, $product_id, $variation_id, $status)
+function threedp_set_product_print_status($order_id, $product_id, $variation_id, $status)
 {
-    return update_post_meta($order_id, bc_get_print_status_meta_key($product_id, $variation_id), $status);
+    return update_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id), $status);
 }
 
 /**
@@ -131,9 +131,9 @@ function bc_set_product_print_status($order_id, $product_id, $variation_id, $sta
  *
  * @return mixed|string
  */
-function bc_get_product_print_status($order_id, $product_id, $variation_id)
+function threedp_get_product_print_status($order_id, $product_id, $variation_id)
 {
-    $meta = get_post_meta($order_id, bc_get_print_status_meta_key($product_id, $variation_id));
+    $meta = get_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id));
     if (sizeof($meta)) {
         return $meta[0];
     }
@@ -148,7 +148,7 @@ function bc_get_product_print_status($order_id, $product_id, $variation_id)
  *
  * @return string
  */
-function bc_get_product_variation_slug($product_id, $variation_id)
+function threedp_get_product_variation_slug($product_id, $variation_id)
 {
     return implode('', func_get_args());
 }
@@ -160,9 +160,9 @@ function bc_get_product_variation_slug($product_id, $variation_id)
  *
  * @return string
  */
-function bc_get_print_status_meta_key($product_id, $variation_id)
+function threedp_get_print_status_meta_key($product_id, $variation_id)
 {
-    return "print-status-" . bc_get_product_variation_slug($product_id, $variation_id);
+    return "print-status-" . threedp_get_product_variation_slug($product_id, $variation_id);
 }
 
 /**
@@ -171,9 +171,9 @@ function bc_get_print_status_meta_key($product_id, $variation_id)
  * @param $product_id
  * @param null $variation_id
  */
-function bc_get_status_form($order_id, $product_id, $variation_id = null)
+function threedp_get_status_form($order_id, $product_id, $variation_id = null)
 {
-    $status             = bc_get_product_print_status($order_id, $product_id, $variation_id);
+    $status             = threedp_get_product_print_status($order_id, $product_id, $variation_id);
     $available_statuses = [
         'pending',
         'printing',
@@ -181,8 +181,8 @@ function bc_get_status_form($order_id, $product_id, $variation_id = null)
     ];
     ?>
     <form method="POST" action="<?php echo esc_html(admin_url('admin-post.php')); ?>">
-        <input type="hidden" name="action" value="bc_print_status_update">
-        <?php wp_nonce_field('bc_print_status_update', 'bc_admin'); ?>
+        <input type="hidden" name="action" value="threedp_print_status_update">
+        <?php wp_nonce_field('threedp_print_status_update', 'threedp_admin'); ?>
         <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
         <input type="hidden" name="product_id" value="<?php echo $product_id ?>">
         <input type="hidden" name="variation_id" value="<?php echo $variation_id ?>">
@@ -201,7 +201,7 @@ function bc_get_status_form($order_id, $product_id, $variation_id = null)
 /**
  * Update an items print status
  */
-function bc_update_status()
+function threedp_update_status()
 {
 //    $nonce = sanitize_text_field($_POST[NONCE_KEY]);
 //    $action = sanitize_text_field($_POST['action']);
@@ -219,7 +219,7 @@ function bc_update_status()
         print 'You can\'t manage options';
         exit;
     }
-    bc_set_product_print_status($order_id, $product_id, $variation_id, $status);
+    threedp_set_product_print_status($order_id, $product_id, $variation_id, $status);
     $redirect_to = $_POST['redirect_to_url'];
     if ($redirect_to) {
         wp_safe_redirect($redirect_to);
@@ -230,7 +230,7 @@ function bc_update_status()
 /**
  * Admin CSS
  */
-function bc_load_css() {
+function threedp_load_css() {
     $url = plugins_url( 'css/style.css' , realpath(__DIR__ ) );
     wp_enqueue_style( 'print_admin_css', $url, false, '1.0.0' );
 }
