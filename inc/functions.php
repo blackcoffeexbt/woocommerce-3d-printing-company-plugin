@@ -13,15 +13,29 @@ function threedp_admin_menu()
 function printing_list_admin_page()
 {
     $url = "/wp-admin/admin.php?page=printing-list.php";
+
+    $status_filter = sanitize_text_field($_GET['status']);
     ?>
     <div class="wrap">
         <h1>Printing List</h1>
         <p><strong>Filter By</strong>
-            <a href="<?php echo $url ?>&status=pending">Pending</a>
+            <?php if ($status_filter == 'pending'): ?>
+                <a href="<?php echo $url ?>&status=pending">Pending</a>
+            <?php else: ?>
+                <strong>Pending</strong>
+            <?php endif; ?>
             |
-            <a href="<?php echo $url ?>&status=printing">Printing</a>
+            <?php if ($status_filter == 'printing'): ?>
+                <a href="<?php echo $url ?>&status=printing">Printing</a>
+            <?php else: ?>
+                <strong>Printing</strong>
+            <?php endif; ?>
             |
-            <a href="<?php echo $url ?>&status=completed">Completed</a>
+            <?php if ($status_filter == 'completed'): ?>
+                <a href="<?php echo $url ?>&status=completed">Completed</a>
+            <?php else: ?>
+                <strong>Completed</strong>
+            <?php endif; ?>
         </p>
         <?php
         //    threedp_set_product_print_status(958, 441, 743, 'printing');
@@ -198,6 +212,8 @@ function threedp_get_status_form($order_id, $product_id, $variation_id = null, $
         'printing',
         'completed',
     ];
+
+    $status_filter = sanitize_text_field($_GET['status']);
     ?>
     <form method="POST" action="<?php echo esc_html(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="action" value="threedp_print_status_update">
@@ -207,7 +223,7 @@ function threedp_get_status_form($order_id, $product_id, $variation_id = null, $
         <input type="hidden" name="variation_id" value="<?php echo $variation_id ?>">
         <input type="hidden" name="index" value="<?php echo $index ?>">
         <input type="hidden" name="redirect_to_url"
-               value="/wp-admin/admin.php?page=printing-list.php#order-<?php echo $order_id ?>">
+               value="/wp-admin/admin.php?page=printing-list.php<?php echo $status_filter ? "&status={$status_filter}" : '' ?>#order-<?php echo $order_id ?>">
         <select name="status">
             <?php foreach($available_statuses as $available_status): ?>
                 <option value="<?php echo $available_status ?>" <?php echo $available_status === $status ? 'selected' : '' ?>><?php echo ucfirst($available_status) ?></option>
@@ -230,11 +246,12 @@ function threedp_update_status()
 //        exit;
 //    }
 
-    $order_id     = intval(sanitize_text_field($_POST['order_id']));
-    $product_id   = intval(sanitize_text_field($_POST['product_id']));
-    $variation_id = intval(sanitize_text_field($_POST['variation_id']));
-    $index        = intval(sanitize_text_field($_POST['index']));
-    $status       = sanitize_text_field($_POST['status']);
+    $order_id      = intval(sanitize_text_field($_POST['order_id']));
+    $product_id    = intval(sanitize_text_field($_POST['product_id']));
+    $variation_id  = intval(sanitize_text_field($_POST['variation_id']));
+    $status_filter = intval(sanitize_text_field($_POST['status_filter']));
+    $index         = intval(sanitize_text_field($_POST['index']));
+    $status        = sanitize_text_field($_POST['status']);
 
     if ( ! current_user_can('manage_options')) {
         print 'You can\'t manage options';
