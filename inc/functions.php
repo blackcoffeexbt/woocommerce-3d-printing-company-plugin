@@ -12,9 +12,17 @@ function threedp_admin_menu()
  */
 function printing_list_admin_page()
 {
+    $url = "/wp-admin/admin.php?page=printing-list.php";
     ?>
     <div class="wrap">
         <h1>Printing List</h1>
+        <p><strong>Filter By</strong>
+            <a href="<?php echo $url ?>&status=pending">Pending</a>
+            |
+            <a href="<?php echo $url ?>&status=printing">Printing</a>
+            |
+            <a href="<?php echo $url ?>&status=completed">Completed</a>
+        </p>
         <?php
         //    threedp_set_product_print_status(958, 441, 743, 'printing');
         threedp_get_orders_with_printed_parts();
@@ -29,14 +37,16 @@ function printing_list_admin_page()
  */
 function threedp_get_orders_with_printed_parts()
 {
-    $query  = new WC_Order_Query(array(
+    $query = new WC_Order_Query(array(
         'limit'   => - 1,
         'orderby' => 'date',
         'order'   => 'ASC',
         'return'  => 'ids',
         'status'  => array('wc-processing'),
     ));
-    $orders = array_reverse($query->get_orders());
+
+    $status_filter = sanitize_text_field($_GET['status']);
+    $orders        = array_reverse($query->get_orders());
 
     $products_without_acf_field_set = [];
 
@@ -66,26 +76,27 @@ function threedp_get_orders_with_printed_parts()
                 }
                 for($i = 0; $i < $item->get_quantity(); $i ++) {
                     $status = threedp_get_product_print_status($order_id, $product_id, $product_variation_id, $i);
-
-                    echo "<div  class=\"bc-printing-list__status bc-printing-list__status--" . sanitize_title($status) . "\">";
-                    echo "<p>{$product_name}</p>";
-                    if ($product->is_type('variation')) {
-                        // Get the variation attributes
-                        $variation_attributes = $product->get_variation_attributes();
-                        // Loop through each selected attributes
-                        foreach($variation_attributes as $attribute_taxonomy => $term_slug) {
-                            // Get product attribute name or taxonomy
-                            $taxonomy = str_replace('attribute_', '', $attribute_taxonomy);
-                            // The label name from the product attribute
-                            echo "<p><strong>" . wc_attribute_label($taxonomy, $product) . ":</strong> ";
-                            // The term name (or value) from this attribute
-                            if (taxonomy_exists($taxonomy)) {
-                                $attribute_value = get_term_by('slug', $term_slug, $taxonomy)->name;
-                            } else {
-                                $attribute_value = $term_slug; // For custom product attributes
+                    if ($status_filter == "" || $status_filter === $status || ($status_filter === 'pending' && $status === null)) {
+                        echo "<div  class=\"bc-printing-list__status bc-printing-list__status--" . sanitize_title($status) . "\">";
+                        echo "<p>{$product_name}</p>";
+                        if ($product->is_type('variation')) {
+                            // Get the variation attributes
+                            $variation_attributes = $product->get_variation_attributes();
+                            // Loop through each selected attributes
+                            foreach($variation_attributes as $attribute_taxonomy => $term_slug) {
+                                // Get product attribute name or taxonomy
+                                $taxonomy = str_replace('attribute_', '', $attribute_taxonomy);
+                                // The label name from the product attribute
+                                echo "<p><strong>" . wc_attribute_label($taxonomy, $product) . ":</strong> ";
+                                // The term name (or value) from this attribute
+                                if (taxonomy_exists($taxonomy)) {
+                                    $attribute_value = get_term_by('slug', $term_slug, $taxonomy)->name;
+                                } else {
+                                    $attribute_value = $term_slug; // For custom product attributes
+                                }
+                                echo $attribute_value;
+                                echo "</p>";
                             }
-                            echo $attribute_value;
-                            echo "</p>";
                         }
                         echo threedp_get_status_form($order_id, $product_id, $product_variation_id, $i);
                         echo "</div>";
