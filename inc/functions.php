@@ -49,13 +49,13 @@ function threedp_get_orders_with_printed_parts()
         foreach($items as $item) {
             $product_id   = $item->get_product_id();
             $product_name = "";
-            $product = null;
+            $product      = null;
             // Does it have 3D printed parts?
             $has_3d_printed_components = get_field('has_3d_printed_components', $product_id);
             if ($has_3d_printed_components === 'yes') {
-                if($i === 0) {
+                if ($i === 0) {
                     echo "<h2><a href=\"/wp-admin/post.php?post={$order_id}&action=edit\">Order {$order_id}</a></h2>";
-                    $i++;
+                    $i ++;
                 }
                 if ($product_variation_id = $item->get_variation_id()) {
                     $product      = wc_get_product($product_variation_id);
@@ -64,9 +64,10 @@ function threedp_get_orders_with_printed_parts()
                     $product      = wc_get_product($product_id);
                     $product_name = $product->get_title();
                 }
-                $status = threedp_get_product_print_status($order_id, $product_id, $product_variation_id);
-                echo "<div  class=\"bc-printing-list__status bc-printing-list__status--" . sanitize_title($status) . "\">";
-                for($i =0; $i < $item->get_quantity(); $i++) {
+                for($i = 0; $i < $item->get_quantity(); $i ++) {
+                    $status = threedp_get_product_print_status($order_id, $product_id, $product_variation_id, $i);
+
+                    echo "<div  class=\"bc-printing-list__status bc-printing-list__status--" . sanitize_title($status) . "\">";
                     echo "<p>{$product_name}</p>";
                     if ($product->is_type('variation')) {
                         // Get the variation attributes
@@ -86,10 +87,10 @@ function threedp_get_orders_with_printed_parts()
                             echo $attribute_value;
                             echo "</p>";
                         }
+                        echo threedp_get_status_form($order_id, $product_id, $product_variation_id, $i);
+                        echo "</div>";
                     }
-                    echo threedp_get_status_form($order_id, $product_id, $product_variation_id);
                 }
-                echo "</div>";
             } else if ($has_3d_printed_components === null) {
                 if ( ! in_array($product_id, $products_without_acf_field_set)) {
                     $products_without_acf_field_set[] = $product_id;
@@ -111,6 +112,7 @@ function threedp_get_orders_with_printed_parts()
 
 /**
  * Set the print status for an order item
+ *
  * @param $order_id
  * @param $product_id
  * @param $variation_id
@@ -118,22 +120,23 @@ function threedp_get_orders_with_printed_parts()
  *
  * @return bool|int
  */
-function threedp_set_product_print_status($order_id, $product_id, $variation_id, $status)
+function threedp_set_product_print_status($order_id, $product_id, $variation_id, $index, $status)
 {
-    return update_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id), $status);
+    return update_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id, $index), $status);
 }
 
 /**
  * Get the print status of an order item
+ *
  * @param $order_id
  * @param $product_id
  * @param $variation_id
  *
  * @return mixed|string
  */
-function threedp_get_product_print_status($order_id, $product_id, $variation_id)
+function threedp_get_product_print_status($order_id, $product_id, $variation_id, $index)
 {
-    $meta = get_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id));
+    $meta = get_post_meta($order_id, threedp_get_print_status_meta_key($product_id, $variation_id, $index));
     if (sizeof($meta)) {
         return $meta[0];
     }
@@ -143,37 +146,42 @@ function threedp_get_product_print_status($order_id, $product_id, $variation_id)
 
 /**
  * Generate a slug for a product variation
+ *
  * @param $product_id
  * @param $variation_id
  *
  * @return string
  */
-function threedp_get_product_variation_slug($product_id, $variation_id)
+function threedp_get_product_variation_slug($product_id, $variation_id, $index = 0)
 {
-    return implode('', func_get_args());
+    $str = implode('', func_get_args());
+
+    return $str;
 }
 
 /**
  * Get the meta key for an order's item
+ *
  * @param $product_id
  * @param $variation_id
  *
  * @return string
  */
-function threedp_get_print_status_meta_key($product_id, $variation_id)
+function threedp_get_print_status_meta_key($product_id, $variation_id, $index = 0)
 {
-    return "print-status-" . threedp_get_product_variation_slug($product_id, $variation_id);
+    return "print-status-" . threedp_get_product_variation_slug($product_id, $variation_id, $index);
 }
 
 /**
  * Get the HTML snippet for the status update form
+ *
  * @param $order_id
  * @param $product_id
  * @param null $variation_id
  */
-function threedp_get_status_form($order_id, $product_id, $variation_id = null)
+function threedp_get_status_form($order_id, $product_id, $variation_id = null, $index = 0)
 {
-    $status             = threedp_get_product_print_status($order_id, $product_id, $variation_id);
+    $status             = threedp_get_product_print_status($order_id, $product_id, $variation_id, $index);
     $available_statuses = [
         'pending',
         'printing',
@@ -186,6 +194,7 @@ function threedp_get_status_form($order_id, $product_id, $variation_id = null)
         <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
         <input type="hidden" name="product_id" value="<?php echo $product_id ?>">
         <input type="hidden" name="variation_id" value="<?php echo $variation_id ?>">
+        <input type="hidden" name="index" value="<?php echo $index ?>">
         <input type="hidden" name="redirect_to_url"
                value="/wp-admin/admin.php?page=printing-list.php#order-<?php echo $order_id ?>">
         <select name="status">
@@ -213,13 +222,14 @@ function threedp_update_status()
     $order_id     = intval(sanitize_text_field($_POST['order_id']));
     $product_id   = intval(sanitize_text_field($_POST['product_id']));
     $variation_id = intval(sanitize_text_field($_POST['variation_id']));
+    $index        = intval(sanitize_text_field($_POST['index']));
     $status       = sanitize_text_field($_POST['status']);
 
     if ( ! current_user_can('manage_options')) {
         print 'You can\'t manage options';
         exit;
     }
-    threedp_set_product_print_status($order_id, $product_id, $variation_id, $status);
+    threedp_set_product_print_status($order_id, $product_id, $variation_id, $index, $status);
     $redirect_to = $_POST['redirect_to_url'];
     if ($redirect_to) {
         wp_safe_redirect($redirect_to);
@@ -230,7 +240,8 @@ function threedp_update_status()
 /**
  * Admin CSS
  */
-function threedp_load_css() {
-    $url = plugins_url( 'css/style.css' , realpath(__DIR__ ) );
-    wp_enqueue_style( 'print_admin_css', $url, false, '1.0.0' );
+function threedp_load_css()
+{
+    $url = plugins_url('css/style.css', realpath(__DIR__));
+    wp_enqueue_style('print_admin_css', $url, false, '1.0.0');
 }
