@@ -20,21 +20,21 @@ function printing_list_admin_page()
         <h1>Printing List</h1>
         <p><strong>Filter By</strong>
             <?php if ($status_filter == 'pending'): ?>
-                <a href="<?php echo $url ?>&status=pending">Pending</a>
-            <?php else: ?>
                 <strong>Pending</strong>
+            <?php else: ?>
+                <a href="<?php echo $url ?>&status=pending">Pending</a>
             <?php endif; ?>
             |
             <?php if ($status_filter == 'printing'): ?>
-                <a href="<?php echo $url ?>&status=printing">Printing</a>
-            <?php else: ?>
                 <strong>Printing</strong>
+            <?php else: ?>
+                <a href="<?php echo $url ?>&status=printing">Printing</a>
             <?php endif; ?>
             |
             <?php if ($status_filter == 'completed'): ?>
-                <a href="<?php echo $url ?>&status=completed">Completed</a>
-            <?php else: ?>
                 <strong>Completed</strong>
+            <?php else: ?>
+                <a href="<?php echo $url ?>&status=completed">Completed</a>
             <?php endif; ?>
         </p>
         <?php
