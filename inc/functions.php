@@ -261,9 +261,13 @@ function threedp_update_status()
 
     $product             = wc_get_product($variation_id);
     $product_description = $product->get_title();
+    $image = "";
+    try {
+        $image = wp_get_attachment_image_src(get_post_thumbnail_id($variation_id), 'single-post-thumbnail');
+        $image = $image[0];
+    } catch(Exception $ex) {}
 
     if ($product->is_type('variation')) {
-        // Get the variation attributes
         $variation_attributes = $product->get_variation_attributes();
         // Loop through each selected attributes
         foreach($variation_attributes as $attribute_taxonomy => $term_slug) {
@@ -292,6 +296,8 @@ function threedp_update_status()
     }
     $nostr_message = "{$product_description} for order {$order_id} " . $statusMessage . "\r\nBuy one at " . get_permalink($product_id);
 
+    $nostr_message .= " " . $image;
+
     if($status !== 'pending') {
         threedp_send_nostr_note($nostr_message);
     }
@@ -305,8 +311,7 @@ function threedp_update_status()
 
 function threedp_send_nostr_note($message)
 {
-
-    $url = 'http://sats.pw:3000/api/send';
+    $url = get_field('shop_nostrest_broadcast_endpoint', 'website_options');
 
     $curl = curl_init($url);
 
