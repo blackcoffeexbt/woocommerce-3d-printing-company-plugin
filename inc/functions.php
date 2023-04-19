@@ -258,11 +258,77 @@ function threedp_update_status()
         exit;
     }
     threedp_set_product_print_status($order_id, $product_id, $variation_id, $index, $status);
+
+    $product      = wc_get_product($variation_id);
+    $product_description = $product->get_title();
+
+    if ($product->is_type('variation')) {
+        // Get the variation attributes
+        $variation_attributes = $product->get_variation_attributes();
+        // Loop through each selected attributes
+        foreach($variation_attributes as $attribute_taxonomy => $term_slug) {
+            // Get product attribute name or taxonomy
+            $taxonomy = str_replace('attribute_', '', $attribute_taxonomy);
+            // The label name from the product attribute
+//            $product_description .= " " . wc_attribute_label($taxonomy, $product) . ": ";
+            // The term name (or value) from this attribute
+            if (taxonomy_exists($taxonomy)) {
+                $attribute_value = get_term_by('slug', $term_slug, $taxonomy)->name;
+            } else {
+                $attribute_value = $term_slug; // For custom product attributes
+            }
+            $product_description .= " - " . $attribute_value;
+        }
+    }
+
+    $status = "";
+    switch($status_filter) {
+        case 'printing':
+            $status = " has started printing!";
+            break;
+        case 'completed':
+            $status = " has finished printing and is ready to ship!";
+            break;
+    }
+    $nostr_message = "{$product_description} for order {$order_id} " . $status;
+
+    threedp_send_nostr_note($nostr_message);
+
     $redirect_to = $_POST['redirect_to_url'];
     if ($redirect_to) {
         wp_safe_redirect($redirect_to);
         exit;
     }
+}
+
+function threedp_send_nostr_note($message){
+
+    $url = 'http://sats.pw:3000/api/send';
+
+    $curl = curl_init($url);
+
+    $data = "{
+  \"message\": \"{$message}\",
+}";
+
+    $postData = array(
+        'message' => $message
+    );
+
+    curl_setopt_array($curl, array(
+        CURLOPT_POST => TRUE,
+        CURLOPT_RETURNTRANSFER => TRUE,
+        CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json'
+        ),
+        CURLOPT_POSTFIELDS => json_encode($postData)
+    ));
+
+    $resp = curl_exec($curl);
+    echo $resp;
+    curl_close($curl);
+
+    return $resp;
 }
 
 /**

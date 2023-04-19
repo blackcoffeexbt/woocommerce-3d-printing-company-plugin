@@ -1,13 +1,13 @@
 <?php
 /**
  * @package 3D Printing Business - Printing List
- * @version 0.0.2
+ * @version 0.1.2
  */
 /*
 Plugin Name: 3D Printing Business - Printing List
 Description: A short desc.
 Author: BC
-Version: 0.0.2
+Version: 0.1.2
 */
 
 //const NONCE_KEY = 'threedp_admin';
