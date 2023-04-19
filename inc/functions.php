@@ -259,7 +259,7 @@ function threedp_update_status()
     }
     threedp_set_product_print_status($order_id, $product_id, $variation_id, $index, $status);
 
-    $product      = wc_get_product($variation_id);
+    $product             = wc_get_product($variation_id);
     $product_description = $product->get_title();
 
     if ($product->is_type('variation')) {
@@ -281,18 +281,20 @@ function threedp_update_status()
         }
     }
 
-    $status = "";
-    switch($status_filter) {
+    $statusMessage = "";
+    switch($status) {
         case 'printing':
-            $status = " has started printing!";
+            $statusMessage = " has started printing!";
             break;
         case 'completed':
-            $status = " has finished printing and is ready to ship!";
+            $statusMessage = " has finished printing and is ready to ship!";
             break;
     }
-    $nostr_message = "{$product_description} for order {$order_id} " . $status;
+    $nostr_message = "{$product_description} for order {$order_id} " . $statusMessage . "\r\nBuy one at " . get_permalink($product_id);
 
-    threedp_send_nostr_note($nostr_message);
+    if($status !== 'pending') {
+        threedp_send_nostr_note($nostr_message);
+    }
 
     $redirect_to = $_POST['redirect_to_url'];
     if ($redirect_to) {
@@ -301,27 +303,27 @@ function threedp_update_status()
     }
 }
 
-function threedp_send_nostr_note($message){
+function threedp_send_nostr_note($message)
+{
 
     $url = 'http://sats.pw:3000/api/send';
 
     $curl = curl_init($url);
 
-    $data = "{
-  \"message\": \"{$message}\",
-}";
+    $shop_nostrest_secret = get_field('shop_nostrest_secret', 'website_options');
 
     $postData = array(
-        'message' => $message
+        'shop_secret' => $shop_nostrest_secret,
+        'message'     => $message
     );
 
     curl_setopt_array($curl, array(
-        CURLOPT_POST => TRUE,
-        CURLOPT_RETURNTRANSFER => TRUE,
-        CURLOPT_HTTPHEADER => array(
+        CURLOPT_POST           => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => array(
             'Content-Type: application/json'
         ),
-        CURLOPT_POSTFIELDS => json_encode($postData)
+        CURLOPT_POSTFIELDS     => json_encode($postData)
     ));
 
     $resp = curl_exec($curl);
