@@ -246,12 +246,12 @@ function threedp_update_status()
 //        exit;
 //    }
 
-    $order_id      = intval(sanitize_text_field($_POST['order_id']));
-    $product_id    = intval(sanitize_text_field($_POST['product_id']));
-    $variation_id  = intval(sanitize_text_field($_POST['variation_id']));
-    $status_filter = intval(sanitize_text_field($_POST['status_filter']));
-    $index         = intval(sanitize_text_field($_POST['index']));
-    $status        = sanitize_text_field($_POST['status']);
+    $order_id      = isset($_POST['order_id']) ? intval(sanitize_text_field($_POST['order_id'])) : null;
+    $product_id    = isset($_POST['product_id']) ? intval(sanitize_text_field($_POST['product_id'])) : null;
+    $variation_id  = isset($_POST['variation_id']) ? intval(sanitize_text_field($_POST['variation_id'])) : null;
+    $status_filter = isset($_POST['status_filter']) ? intval(sanitize_text_field($_POST['status_filter'])) : null;
+    $index         = isset($_POST['index']) ? intval(sanitize_text_field($_POST['index'])) : null;
+    $status        = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : null;
 
     if ( ! current_user_can('manage_options')) {
         print 'You can\'t manage options';
@@ -260,14 +260,19 @@ function threedp_update_status()
     threedp_set_product_print_status($order_id, $product_id, $variation_id, $index, $status);
 
     $product             = wc_get_product($variation_id);
-    $product_description = $product->get_title();
+    $product_description = "";
+
+    if ($product instanceof WC_Product) {
+        $product_description = $product->get_title();
+    }
+
     $image = "";
     try {
         $image = wp_get_attachment_image_src(get_post_thumbnail_id($variation_id), 'single-post-thumbnail');
         $image = $image[0];
     } catch(Exception $ex) {}
 
-    if ($product->is_type('variation')) {
+    if ($product instanceof WC_Product && $product->is_type('variation')) {
         $variation_attributes = $product->get_variation_attributes();
         // Loop through each selected attributes
         foreach($variation_attributes as $attribute_taxonomy => $term_slug) {
